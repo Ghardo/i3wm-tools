@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'i3ipc'
+
+i3 = I3Ipc::Connection.new
+focused = i3.workspaces.select{|v| v.focused == true}.shift
+all_outputs = i3.outputs.select{|v| v.active == true}
+next_output = all_outputs.select{|v| v.name != focused.output}.shift
+
+i3.command("move workspace to output #{next_output.name}")
+i3.close

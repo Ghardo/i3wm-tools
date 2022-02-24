@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+require 'i3ipc'
+
+i3 = I3Ipc::Connection.new
+workspace=nil
+
+case ARGV.length
+when 1
+	focused = i3.workspaces.select{|v| v.focused == true}.shift
+	workspace = focused.name
+	name=ARGV[0]
+when 2
+	workspace = ARGV[0]
+	name=ARGV[1]
+else
+	raise "Wrong parameter count"
+end
+
+msg="workspace #{workspace}; append_layout #{ENV["HOME"]}/.i3workspaces/#{name}.json"
+
+i3.command(msg)
+i3.close

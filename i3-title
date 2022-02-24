@@ -1,0 +1,66 @@
+#!/usr/bin/ruby
+require 'tty-prompt'
+
+def setTitle(title:, window:nil) 
+    if window == nil
+        window=%x{/usr/bin/xprop -root}.match(/_NET_ACTIVE_WINDOW\(WINDOW\): window id # 0x(?<wid>[0-9]+)/)['wid']
+    end
+    r=Regexp.new(Regexp.escape(window) + '\s+\d\s(?<pid>\d{5})\s+[^ ]+\s(?<wtitle>.*?)$', Regexp::MULTILINE)
+    m=%x{/bin/wmctrl -lp}.match(r)
+    pid=m['pid']
+    wtitle=m['wtitle']
+    puts "\033]0;#{title}\007"
+    exec("xdotool search -all --pid #{pid} --name \"#{wtitle}\" set_window -name \"#{title}\"")
+end
+
+if ARGV.length > 0 
+    setTitle(title: ARGV.join(" "))
+    exit
+end
+
+begin
+	prompt = TTY::Prompt.new
+	time = Time.new
+	branch = nil
+	jtd = nil
+
+	if File.directory?("#{Dir.pwd}/.git")
+		branch = %x{git rev-parse --abbrev-ref HEAD 2>&1}.strip
+	end
+
+	strings = [
+		"RXVT #{Dir.pwd}",
+		"RXVT #{File.basename(Dir.pwd)}",
+
+		"RXVT GIT #{File.basename(Dir.pwd)} #{branch}",
+		"RXVT #{time.strftime('%Y-%m-%d %H:%M:%S')}",
+		"RXVT #{time.strftime('%H:%M:%S')}",
+		"RXVT #{time.strftime('%Y-%m-%d %H:%M')}",
+		"RXVT #{time.strftime('%H:%M')}"
+	]
+
+	if branch == nil
+		strings.delete_at(3)
+	end
+
+	choice = prompt.select('Set terminal title', per_page: 10) do |menu|
+
+	  menu.enum '.'
+
+	  menu.choice name: 'Custom',  value: strings.length + 1
+	  strings.each_index{|i|
+	  	menu.choice name: strings[i],  value: i
+	  }
+
+	end
+
+	if choice != strings.length+1
+		title = prompt.ask('>', value: strings[choice])
+	else
+		title = prompt.ask('>')
+	end
+
+    setTitle(title: title)
+rescue
+	puts "\n\n"
+end

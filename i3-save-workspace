@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require 'i3ipc'
+require 'pp'
+
+i3 = I3Ipc::Connection.new
+focused = i3.workspaces.select{|v| v.focused == true}.shift
+
+choice=%x{/usr/bin/yad \
+--title="Save Workspace" \
+--form \
+--item-separator=, \
+--separator=" " \
+--field="Workspace":NUM #{focused.name},0..32,1 \
+--field="Name" "workspace-#{focused.name}" Text \
+--button="Speichern" \
+--button="Abbrechen"}
+
+REGEX=%r{(?<workspace>\d{1,2})\s(?<name>.*)}
+matches = choice.strip.match(REGEX)
+
+%x{i3-save-tree --workspace "#{matches['workspace']}" > ~/.i3workspaces/#{matches['name']}.json}
+
+i3.close

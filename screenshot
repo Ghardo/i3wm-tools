@@ -1,0 +1,29 @@
+#!/bin/bash
+
+sleep 0.2
+
+SCREENSHOTPATH=~/Bilder/Screenshots
+LATEST=${SCREENSHOTPATH}/latest.png
+PREVIEW=${SCREENSHOTPATH}/preview.png
+
+mkdir -p $SCREENSHOTPATH
+
+scrot -s -q 100 -o ${LATEST}
+paplay /usr/share/sounds/freedesktop/stereo/screen-capture.oga &
+
+mogrify -crop +1+1 -crop -1-1 +repage ${LATEST}
+
+cp ${LATEST} ${PREVIEW}
+mogrify -resize "320x240>" ${PREVIEW}
+xclip -sel clip -t image/png -i ${LATEST}
+
+FILENAME="screenshot_$(date '+%Y_%m_%d_%H_%M_%S').png"
+
+/usr/bin/yad --title="New screenshot" --text="Save as '${FILENAME}'?" --button="Yes its cool" --button="No trash it" --image=${PREVIEW}
+ret=$?
+
+if [ $ret = 0 ]; then
+    cp ${LATEST} ${SCREENSHOTPATH}/${FILENAME}
+fi
+
+rm ${LATEST} ${PREVIEW}

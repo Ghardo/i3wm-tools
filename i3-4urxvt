@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'i3ipc'
+
+i3 = I3Ipc::Connection.new
+i3.command("append_layout #{ENV["HOME"]}/.i3workspaces/4urxvt.json")
+
+sleep 0.1
+
+4.times do 
+	i3.command "exec urxvt"
+end
+
+i3.close
